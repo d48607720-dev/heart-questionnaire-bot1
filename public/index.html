@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Давай узнаем друг друга 💗</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root { color-scheme: light; --pink:#e879a2; --ink:#392b35; --muted:#8d7b86; }
+    * { box-sizing:border-box }
+    body {
+      margin:0; min-height:100vh; padding:22px 16px;
+      background:
+      radial-gradient(circle at 8% 12%, #ffe0eb 0 2px, transparent 3px),
+      radial-gradient(circle at 91% 18%, #f6c8d9 0 3px, transparent 4px),
+      radial-gradient(circle at 15% 88%, #f8d4e1 0 3px, transparent 4px),
+      linear-gradient(145deg,#fff4f7,#f8e8f0 55%,#fff9fb);
+      color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      display:flex; justify-content:center; align-items:center;
+    }
+    .app { width:100%; max-width:440px; }
+    .card {
+      background:rgba(255,255,255,.88); border:1px solid #ffffff;
+      border-radius:29px; padding:27px 22px; box-shadow:0 18px 55px #9c61731c;
+      position:relative; overflow:hidden;
+    }
+    .heart { font-size:34px; text-align:center; margin-bottom:8px }
+    .topline { text-align:center; color:var(--muted); font-size:12px; letter-spacing:.12em; text-transform:uppercase }
+    h1 { text-align:center; font-size:25px; line-height:1.2; margin:10px 0 12px }
+    p { text-align:center; color:var(--muted); line-height:1.5; font-size:14px }
+    .progress { height:6px; background:#f4e4eb; border-radius:20px; overflow:hidden; margin:22px 0 }
+    .bar { height:100%; width:0; background:var(--pink); border-radius:20px; transition:width .25s }
+    .question { font-size:20px; font-weight:700; line-height:1.3; margin:12px 0 17px }
+    .options { display:grid; gap:10px }
+    button {
+      width:100%; border:0; border-radius:15px; padding:14px 15px;
+      font-size:15px; font-weight:600; cursor:pointer; color:var(--ink);
+      background:#fff0f5; text-align:left;
+    }
+    button:active { transform:scale(.99) }
+    button.selected { background:#f6cddd; outline:2px solid #e98caf }
+    .primary { background:var(--pink); color:white; text-align:center; margin-top:18px }
+    .secondary { background:#f4edf0; text-align:center; margin-top:10px; color:#75636d }
+    textarea {
+      width:100%; min-height:95px; resize:vertical; border:1px solid #efd5e0;
+      border-radius:15px; padding:13px; font:inherit; font-size:15px; outline:none;
+      background:#fffafd; color:var(--ink);
+    }
+    .hidden { display:none }
+    .small { font-size:12px; text-align:center; color:var(--muted); margin-top:14px }
+    .status { text-align:center; font-size:14px; margin-top:12px; color:var(--muted) }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="card" id="welcome">
+      <div class="heart">🌷 💗 🌷</div>
+      <div class="topline">маленькая анкета для двоих</div>
+      <h1>Давай узнаем друг друга</h1>
+      <p>Несколько лёгких вопросов — отвечай так, как тебе самой хочется. Здесь нет неправильных ответов.</p>
+      <div class="small" style="background:#fff3f7;border-radius:14px;padding:12px;line-height:1.5">
+        🌷 Готова ли ты пройти эту анкету? В ней 8 вопросов о симпатиях и общении. Если продолжишь, твои ответы будут отправлены автору анкеты — @wearecs1. Не указывай пароли, адреса и другие личные секреты. Любой вопрос можно пропустить, а анкету — закрыть в любой момент. Просьба не пересылать ответы другим без согласия. Ты сама решаешь, рассказывать ли подругам об участии.
+      </div>
+      <div id="readyChoices" class="options" style="margin-top:14px">
+        <button id="readyYes">Да, я готова 💗</button>
+        <button id="readyNo" class="secondary" style="margin-top:0">Нет, пока не готова</button>
+      </div>
+      <button class="primary hidden" id="start">Начать анкету 💌</button>
+      <div class="small" id="readyMessage">Выбери, готова ли ты продолжить. Решение полностью за тобой.</div>
+      <div class="small">Анкета рассчитана на один Telegram-аккаунт и одну отправку ответов.</div>
+    </section>
+
+    <section class="card hidden" id="quiz">
+      <div class="topline" id="counter"></div>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+      <div class="question" id="question"></div>
+      <div id="choices" class="options"></div>
+      <div id="freeWrap" class="hidden">
+        <textarea id="freeText" placeholder="Напиши свой вариант..."></textarea>
+      </div>
+      <button class="primary" id="next">Дальше →</button>
+      <div class="small">Отвечай только на то, чем комфортно делиться.</div>
+    </section>
+
+    <section class="card hidden" id="final">
+      <div class="heart">🌸 💞 🌸</div>
+      <div class="topline">самый важный вопрос</div>
+      <h1>Хотела бы ты продолжить со мной общаться?</h1>
+      <p>Любой ответ нормальный. Главное — чтобы тебе было комфортно.</p>
+      <button class="primary" id="yes">Да 💗</button>
+      <button class="secondary" id="no">Нет, спасибо</button>
+    </section>
+
+    <section class="card hidden" id="done">
+      <div class="heart">💐 💌 💐</div>
+      <h1>Спасибо за ответы!</h1>
+      <p id="doneText">Твои ответы отправлены. Спасибо, что уделила время.</p>
+    </section>
+    <div class="status" id="status"></div>
+  </main>
+
+<script>
+(() => {
+  const tg = window.Telegram?.WebApp;
+  tg?.ready();
+  tg?.expand();
+
+  const questions = [
+    { q:"Какой типаж парней тебе нравится?", a:["Добрый и заботливый","С чувством юмора","Спокойный и надёжный","Уверенный в себе","Главное — характер","Свой вариант"] },
+    { q:"Какие цветы тебе нравятся больше всего?", a:["Розы 🌹","Тюльпаны 🌷","Пионы","Ромашки 🌼","Неважно, главное — внимание","Другие"] },
+    { q:"Какой знак внимания тебе приятнее?", a:["Неожиданный букет","Милое сообщение","Небольшой подарок","Прогулка вдвоём","Когда помнят мелочи"] },
+    { q:"Что тебе хотелось бы чаще слышать от парня?", a:["«Как прошёл твой день?»","«Я тобой горжусь»","«Ты мне очень нравишься»","«Я рядом, если что»","Искренние комплименты"] },
+    { q:"Какое свидание тебе ближе?", a:["Прогулка вечером","Кафе и разговоры","Кино","Пикник","Что-нибудь спонтанное"] },
+    { q:"Что для тебя важнее всего в общении?", a:["Честность","Внимание","Доверие","Юмор и лёгкость","Уважение к личным границам"] },
+    { q:"Какой стиль общения тебе нравится?", a:["Переписываться часто","Созваниваться","Общаться лично","Без расписания — как получается"] },
+    { q:"Что может сразу поднять тебе настроение?", a:["Милое сообщение","Цветы без повода","Смешная шутка","Внимание к мелочам","Просто искренний разговор"] }
+  ];
+
+  let index = 0;
+  const answers = [];
+  let selected = null;
+
+  const $ = id => document.getElementById(id);
+  const show = id => ["welcome","quiz","final","done"].forEach(x => $(x).classList.toggle("hidden", x !== id));
+
+  $("readyYes").onclick = () => {
+    $("readyChoices").classList.add("hidden");
+    $("start").classList.remove("hidden");
+    $("readyMessage").textContent = "Спасибо! Можешь начать, когда будешь готова.";
+  };
+  $("readyNo").onclick = () => {
+    $("readyChoices").classList.add("hidden");
+    $("readyMessage").textContent = "Ничего страшного 💗 Анкету можно закрыть. Ты можешь решить позже, без давления.";
+  };
+
+  $("start").onclick = async () => {
+    if (!tg?.initData) {
+      $("status").textContent = "Открой анкету через Telegram-бота.";
+      return;
+    }
+    $("start").disabled = true;
+    $("status").textContent = "Проверяем доступ…";
+    try {
+      const response = await fetch("/api/claim", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ initData:tg.initData })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Доступ недоступен.");
+      $("status").textContent = "";
+      show("quiz");
+      render();
+    } catch (e) {
+      $("start").disabled = false;
+      $("status").textContent = e.message || "Не удалось проверить доступ.";
+    }
+  };
+
+  function render() {
+    const item = questions[index];
+    selected = null;
+    $("counter").textContent = `ВОПРОС ${index + 1} ИЗ ${questions.length}`;
+    $("bar").style.width = `${(index / questions.length) * 100}%`;
+    $("question").textContent = item.q;
+    $("choices").innerHTML = "";
+    $("freeWrap").classList.add("hidden");
+    $("freeText").value = "";
+
+    item.a.forEach(choice => {
+      const b = document.createElement("button");
+      b.textContent = choice;
+      b.onclick = () => {
+        [...$("choices").children].forEach(x => x.classList.remove("selected"));
+        b.classList.add("selected");
+        selected = choice;
+        $("freeWrap").classList.toggle("hidden", choice !== "Свой вариант" && choice !== "Другие");
+      };
+      $("choices").appendChild(b);
+    });
+    $("next").textContent = index === questions.length - 1 ? "К главному вопросу 💗" : "Дальше →";
+  }
+
+  $("next").onclick = () => {
+    if (!selected) { $("status").textContent = "Выбери вариант ответа 🙂"; return; }
+    let answer = selected;
+    if (selected === "Свой вариант" || selected === "Другие") {
+      answer = $("freeText").value.trim();
+      if (!answer) { $("status").textContent = "Напиши свой вариант или выбери другой ответ."; return; }
+    }
+    answers.push({ question: questions[index].q, answer });
+    $("status").textContent = "";
+    index++;
+    if (index < questions.length) render();
+    else show("final");
+  };
+
+  async function submit(finalAnswer) {
+    $("yes").disabled = true;
+    $("no").disabled = true;
+    $("status").textContent = "Отправляем ответы…";
+    try {
+      const response = await fetch("/api/answers", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ initData:tg?.initData || "", answers:{items:answers, finalAnswer} })
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.error || "Не удалось отправить ответы.");
+      }
+      show("done");
+      $("doneText").textContent = finalAnswer === "Да 💗"
+        ? "Твои ответы отправлены. Спасибо! 💗"
+        : "Твои ответы отправлены. Спасибо за честность — твой ответ уважают.";
+      $("status").textContent = "";
+    } catch (e) {
+      $("yes").disabled = false;
+      $("no").disabled = false;
+      $("status").textContent = e.message || "Не получилось отправить ответы.";
+    }
+  }
+  $("yes").onclick = () => submit("Да 💗");
+  $("no").onclick = () => submit("Нет, спасибо");
+})();
+</script>
+</body>
+</html>
